@@ -10,47 +10,51 @@ exports.getTasks = (req, res) => {
 	const userId = req.user.id
 	const isAdmin = req.user.role === 'admin'
 
-	console.log('📥 GET /tasks', {
-		userId,
-		isAdmin,
-		query: req.query,
-	})
+	console.log('📥 GET /tasks', { userId, isAdmin, query: req.query })
 
-	let query = `SELECT * FROM tasks WHERE 1=1`
+	let baseQuery = `FROM tasks WHERE 1=1`
 	let params = []
 
 	if (!isAdmin) {
-		query += ` AND userId = ?`
+		baseQuery += ` AND userId = ?`
 		params.push(userId)
 	}
 
 	if (search) {
-		query += ` AND title LIKE ?`
+		baseQuery += ` AND title LIKE ?`
 		params.push(`%${search}%`)
 	}
 
 	if (status !== undefined && status !== '') {
-		query += ` AND isCompleted = ?`
+		baseQuery += ` AND isCompleted = ?`
 		params.push(status === 'true' ? 1 : 0)
 	}
 
-	query += ` LIMIT ? OFFSET ?`
-	params.push(Number(limit), Number(offset))
-
-	console.log('🟡 SQL:', query)
-	console.log('🟡 PARAMS:', params)
-
-	db.all(query, params, (err, rows) => {
+	// Сначала получаем total
+	db.get(`SELECT COUNT(*) as total ${baseQuery}`, params, (err, row) => {
 		if (err) {
-			console.error('🔴 getTasks error:', err)
+			console.error('🔴 COUNT ERROR:', err)
 			return res.status(500).json({ message: 'Database error' })
 		}
 
-		console.log('🟢 TASKS FOUND:', rows.length)
+		const total = row.total
 
-		res.json({
-			tasks: rows,
-			total: rows.length,
+		// Потом получаем саму страницу
+		const query = `SELECT * ${baseQuery} LIMIT ? OFFSET ?`
+		const queryParams = [...params, Number(limit), Number(offset)]
+
+		db.all(query, queryParams, (err, rows) => {
+			if (err) {
+				console.error('🔴 getTasks error:', err)
+				return res.status(500).json({ message: 'Database error' })
+			}
+
+			console.log('🟢 TASKS FOUND:', rows.length)
+
+			res.json({
+				tasks: rows,
+				total, // ✅ возвращаем общее количество
+			})
 		})
 	})
 }
