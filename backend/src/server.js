@@ -2,8 +2,7 @@
 require('dotenv').config()
 
 const app = require('./app')
-const seedDatabase = require('./db/seed') // ← теперь правильно, т.к. seed.js в src/db/
-
+const seedDatabase = require('./db/seed')
 const PORT = process.env.PORT || 3001
 
 // Seed базы данных (только в development)
@@ -18,4 +17,14 @@ app.listen(PORT, () => {
 	console.log(`   • Admin → admin@test.com / admin123`)
 	console.log(`   • User  → user@test.com / 123456`)
 	console.log(`   • Secret admin code → ADMIN123`)
+})
+
+app.use((req, res, next) => {
+	console.log('📥 Request:', {
+		method: req.method,
+		url: req.url,
+		body: req.body,
+		query: req.query,
+	})
+	next()
 })

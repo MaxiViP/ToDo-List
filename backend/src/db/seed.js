@@ -6,11 +6,8 @@ const bcrypt = require('bcryptjs')
 const seedDatabase = () => {
 	console.log('🌱 Seeding database...')
 
-	const adminPassword = 'admin123'
-	const userPassword = '123456'
-
-	const adminHash = bcrypt.hashSync(adminPassword, 10)
-	const userHash = bcrypt.hashSync(userPassword, 10)
+	const adminHash = bcrypt.hashSync('admin123', 10)
+	const userHash = bcrypt.hashSync('123456', 10)
 
 	// Создаём админа
 	db.run(
@@ -32,16 +29,16 @@ const seedDatabase = () => {
 	db.get(`SELECT id FROM users WHERE email = 'user@test.com'`, [], (err, user) => {
 		if (user) {
 			const tasks = [
-				['Купить продукты', 'Молоко, хлеб, яйца', '2026-04-05', 0, user.id],
-				['Сдать проект', 'Завершить тестовое задание', '2026-04-10', 0, user.id],
-				['Позвонить маме', '', '2026-04-02', 1, user.id],
+				['Купить продукты', 'Молоко, хлеб, яйца', '2026-04-05', 'normal', 0, user.id],
+				['Сдать проект', 'Завершить тестовое задание', '2026-04-10', 'high', 0, user.id],
+				['Позвонить маме', '', '2026-04-02', 'low', 1, user.id],
 			]
 
-			tasks.forEach(([title, description, dueDate, isCompleted, userId]) => {
+			tasks.forEach(([title, description, dueDate, priority, isCompleted, userId]) => {
 				db.run(
-					`INSERT OR IGNORE INTO tasks (id, title, description, dueDate, isCompleted, userId)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-					[uuid(), title, description, dueDate, isCompleted, userId],
+					`INSERT OR IGNORE INTO tasks (id, title, description, dueDate, priority, isCompleted, userId)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+					[uuid(), title, description, dueDate, priority, isCompleted, userId],
 				)
 			})
 			console.log('✅ Test tasks added for user@test.com')

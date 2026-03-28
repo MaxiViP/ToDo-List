@@ -57,8 +57,7 @@ exports.register = async (req, res) => {
 				}
 				return res.status(500).json({ message: 'Server error' })
 			}
-
-			// После регистрации сразу логиним пользователя
+      
 			const token = jwt.sign({ id: this.lastID, role }, process.env.JWT_SECRET, { expiresIn: '7d' })
 
 			res.status(201).json({
