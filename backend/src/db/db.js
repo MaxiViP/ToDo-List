@@ -2,7 +2,6 @@
 const sqlite3 = require('sqlite3').verbose()
 const path = require('path')
 
-// База будет храниться в файле tasks.db в папке db
 const dbPath = path.join(__dirname, 'tasks.db')
 
 const db = new sqlite3.Database(dbPath, err => {
@@ -13,7 +12,6 @@ const db = new sqlite3.Database(dbPath, err => {
 	}
 })
 
-// Создание таблиц, если их ещё нет
 db.serialize(() => {
 	// USERS
 	db.run(`
@@ -21,7 +19,8 @@ db.serialize(() => {
       id TEXT PRIMARY KEY,
       email TEXT UNIQUE,
       password TEXT,
-      role TEXT
+      role TEXT,
+      refreshToken TEXT
     )
   `)
 
@@ -32,11 +31,13 @@ db.serialize(() => {
       title TEXT,
       description TEXT,
       dueDate TEXT,
-      priority TEXT DEFAULT 'обычный',
+      priority TEXT DEFAULT 'normal',
       isCompleted INTEGER DEFAULT 0,
       userId TEXT
     )
   `)
 })
-
+// ✅ ИНДЕКСЫ
+db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_userId ON tasks(userId)`)
+db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_completed ON tasks(isCompleted)`)
 module.exports = db

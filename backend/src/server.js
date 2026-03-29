@@ -10,15 +10,6 @@ if (process.env.NODE_ENV !== 'production') {
 	seedDatabase()
 }
 
-// Запуск сервера
-app.listen(PORT, () => {
-	console.log(`🚀 Server running on http://localhost:${PORT}`)
-	console.log(`👤 Test accounts:`)
-	console.log(`   • Admin → admin@test.com / admin123`)
-	console.log(`   • User  → user@test.com / 123456`)
-	console.log(`   • Secret admin code → ADMIN123`)
-})
-
 app.use((req, res, next) => {
 	console.log('📥 Request:', {
 		method: req.method,
@@ -27,4 +18,13 @@ app.use((req, res, next) => {
 		query: req.query,
 	})
 	next()
+})
+
+// Запуск сервера
+app.listen(PORT, () => {
+	console.log(`🚀 Server running on http://localhost:${PORT}`)
+	console.log(`👤 Test accounts:`)
+	console.log(`   • Admin → admin@test.com / admin123`)
+	console.log(`   • User  → user@test.com / 123456`)
+	console.log(`   • Secret admin code → ADMIN123`)
 })

@@ -53,7 +53,7 @@ exports.getTasks = (req, res) => {
 
 			res.json({
 				tasks: rows,
-				total, // ✅ возвращаем общее количество
+				total,
 			})
 		})
 	})
@@ -65,19 +65,23 @@ exports.getTasks = (req, res) => {
 exports.createTask = (req, res) => {
 	console.log('📥 POST /tasks BODY:', req.body)
 
-	const { title, description, dueDate } = req.body
+	const { title, description, dueDate, priority } = req.body
 
 	if (!title) {
 		console.warn('⚠️ Title missing')
 		return res.status(400).json({ message: 'Title is required' })
 	}
 
+	// Валидация приоритета
+	const allowedPriorities = ['low', 'normal', 'high']
+	const finalPriority = allowedPriorities.includes(priority) ? priority : 'normal'
+
 	const id = uuid()
 
 	db.run(
-		`INSERT INTO tasks (id, title, description, dueDate, isCompleted, userId) 
-     VALUES (?, ?, ?, ?, ?, ?)`,
-		[id, title, description || '', dueDate || null, 0, req.user.id],
+		`INSERT INTO tasks (id, title, description, dueDate, priority, isCompleted, userId) 
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		[id, title, description || '', dueDate || null, finalPriority, 0, req.user.id],
 		function (err) {
 			if (err) {
 				console.error('🔴 CREATE ERROR:', err)
@@ -95,6 +99,7 @@ exports.createTask = (req, res) => {
 				title,
 				description: description || '',
 				dueDate: dueDate || null,
+				priority: finalPriority,
 				isCompleted: 0,
 				userId: req.user.id,
 			})
@@ -107,7 +112,7 @@ exports.createTask = (req, res) => {
 // =====================
 exports.updateTask = (req, res) => {
 	const { id } = req.params
-	const { title, description, dueDate, isCompleted } = req.body
+	const { title, description, dueDate, isCompleted, priority } = req.body
 
 	console.log('📥 PUT /tasks/:id', {
 		id,
@@ -134,9 +139,22 @@ exports.updateTask = (req, res) => {
 			return res.status(403).json({ message: 'Forbidden' })
 		}
 
+		// Подготовка данных: если поле не передано, оставляем старое значение
+		const newTitle = title !== undefined ? title : task.title
+		const newDescription = description !== undefined ? description : task.description
+		const newDueDate = dueDate !== undefined ? dueDate : task.dueDate
+		const newIsCompleted = isCompleted !== undefined ? (isCompleted ? 1 : 0) : task.isCompleted
+
+		// Валидация приоритета, если передан
+		let newPriority = task.priority
+		if (priority !== undefined) {
+			const allowedPriorities = ['low', 'normal', 'high']
+			newPriority = allowedPriorities.includes(priority) ? priority : task.priority
+		}
+
 		db.run(
-			`UPDATE tasks SET title=?, description=?, dueDate=?, isCompleted=? WHERE id=?`,
-			[title, description || task.description, dueDate || task.dueDate, isCompleted ? 1 : 0, id],
+			`UPDATE tasks SET title=?, description=?, dueDate=?, priority=?, isCompleted=? WHERE id=?`,
+			[newTitle, newDescription, newDueDate, newPriority, newIsCompleted, id],
 			function (err) {
 				if (err) {
 					console.error('🔴 UPDATE ERROR:', err)
