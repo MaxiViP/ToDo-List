@@ -9,7 +9,23 @@ exports.getTasks = (req, res) => {
 	const offset = (page - 1) * limit
 	const userId = req.user.id
 	const isAdmin = req.user.role === 'admin'
+	const { sort = 'date' } = req.query
 
+	let orderBy = 'ORDER BY dueDate DESC'
+
+	if (sort === 'status') {
+		orderBy = `
+  ORDER BY 
+    isCompleted ASC, 
+    CASE 
+      WHEN priority = 'high' THEN 1
+      WHEN priority = 'normal' THEN 2
+      WHEN priority = 'low' THEN 3
+      ELSE 4
+    END,
+    dueDate ASC
+`
+	}
 	console.log('📥 GET /tasks', { userId, isAdmin, query: req.query })
 
 	let baseQuery = `FROM tasks WHERE 1=1`
@@ -40,7 +56,11 @@ exports.getTasks = (req, res) => {
 		const total = row.total
 
 		// Потом получаем саму страницу
-		const query = `SELECT * ${baseQuery} LIMIT ? OFFSET ?`
+		const query = `
+  SELECT * ${baseQuery}
+  ${orderBy}
+  LIMIT ? OFFSET ?
+`
 		const queryParams = [...params, Number(limit), Number(offset)]
 
 		db.all(query, queryParams, (err, rows) => {

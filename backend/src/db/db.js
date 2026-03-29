@@ -41,3 +41,5 @@ db.serialize(() => {
 db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_userId ON tasks(userId)`)
 db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_completed ON tasks(isCompleted)`)
 module.exports = db
+
+

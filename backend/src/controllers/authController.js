@@ -29,18 +29,13 @@ exports.login = (req, res) => {
 			if (err) console.error('Failed to save refreshToken:', err)
 		})
 
-		// Устанавливаем cookie
-		const maxAge = rememberMe
-			? 30 * 24 * 60 * 60 * 1000 // 30 дней
-			: 24 * 60 * 60 * 1000 // 1 день (или уберите maxAge для session cookie)
-
+		const isProduction = process.env.NODE_ENV === 'production'
 		res.cookie('refreshToken', refreshToken, {
 			httpOnly: true,
-			// sameSite: 'strict',
-			// secure: process.env.NODE_ENV === 'production',
-			sameSite: 'none',
-			secure: true,
-			maxAge: maxAge,
+			sameSite: isProduction ? 'strict' : 'lax',
+			secure: isProduction,
+			maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : isProduction ? undefined : 24 * 60 * 60 * 1000,
+			path: '/',
 		})
 
 		res.json({
