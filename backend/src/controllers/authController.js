@@ -1,3 +1,4 @@
+// authController.js
 const db = require('../db/db')
 const { v4: uuid } = require('uuid')
 const bcrypt = require('bcryptjs')

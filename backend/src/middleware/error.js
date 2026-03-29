@@ -1,3 +1,4 @@
+// middleware / error.js
 module.exports = (err, req, res, next) => {
 	console.error(err)
 

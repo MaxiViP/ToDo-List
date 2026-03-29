@@ -1,3 +1,4 @@
+// taskController.js
 const db = require('../db/db')
 const { v4: uuid } = require('uuid')
 
@@ -5,11 +6,13 @@ const { v4: uuid } = require('uuid')
 // GET TASKS
 // =====================
 exports.getTasks = (req, res) => {
-	const { page = 1, limit = 15, search = '', status } = req.query
-	const offset = (page - 1) * limit
+	const { page = 1, limit = 15, search = '', status, sort = 'date' } = req.query
+	const pageNum = Number(page)
+	const limitNum = Number(limit)
+	const offset = (pageNum - 1) * limitNum
+
 	const userId = req.user.id
 	const isAdmin = req.user.role === 'admin'
-	const { sort = 'date' } = req.query
 
 	let orderBy = 'ORDER BY dueDate DESC'
 
@@ -41,7 +44,7 @@ exports.getTasks = (req, res) => {
 		params.push(`%${search}%`)
 	}
 
-	if (status !== undefined && status !== '') {
+	if (status != null && status !== '') {
 		baseQuery += ` AND isCompleted = ?`
 		params.push(status === 'true' ? 1 : 0)
 	}
