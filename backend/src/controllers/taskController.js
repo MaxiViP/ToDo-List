@@ -1,10 +1,14 @@
-// taskController.js
 const db = require('../db/db')
 const { v4: uuid } = require('uuid')
 
-// =====================
-// GET TASKS
-// =====================
+/**
+ * @typedef {import('express').Request & { user: { id: string, role: string } }} AuthRequest
+ */
+
+/**
+ * @param {AuthRequest} req
+ * @param {import('express').Response} res
+ */
 exports.getTasks = (req, res) => {
 	const { page = 1, limit = 15, search = '', status, sort = 'date' } = req.query
 	const pageNum = Number(page)
@@ -49,7 +53,6 @@ exports.getTasks = (req, res) => {
 		params.push(status === 'true' ? 1 : 0)
 	}
 
-	// Сначала получаем total
 	db.get(`SELECT COUNT(*) as total ${baseQuery}`, params, (err, row) => {
 		if (err) {
 			console.error('🔴 COUNT ERROR:', err)
@@ -58,7 +61,6 @@ exports.getTasks = (req, res) => {
 
 		const total = row.total
 
-		// Потом получаем саму страницу
 		const query = `
   SELECT * ${baseQuery}
   ${orderBy}
@@ -82,9 +84,6 @@ exports.getTasks = (req, res) => {
 	})
 }
 
-// =====================
-// CREATE TASK
-// =====================
 exports.createTask = (req, res) => {
 	console.log('📥 POST /tasks BODY:', req.body)
 
@@ -95,7 +94,6 @@ exports.createTask = (req, res) => {
 		return res.status(400).json({ message: 'Title is required' })
 	}
 
-	// Валидация приоритета
 	const allowedPriorities = ['low', 'normal', 'high']
 	const finalPriority = allowedPriorities.includes(priority) ? priority : 'normal'
 
@@ -130,9 +128,6 @@ exports.createTask = (req, res) => {
 	)
 }
 
-// =====================
-// UPDATE TASK
-// =====================
 exports.updateTask = (req, res) => {
 	const { id } = req.params
 	const { title, description, dueDate, isCompleted, priority } = req.body
@@ -162,13 +157,11 @@ exports.updateTask = (req, res) => {
 			return res.status(403).json({ message: 'Forbidden' })
 		}
 
-		// Подготовка данных: если поле не передано, оставляем старое значение
 		const newTitle = title !== undefined ? title : task.title
 		const newDescription = description !== undefined ? description : task.description
 		const newDueDate = dueDate !== undefined ? dueDate : task.dueDate
 		const newIsCompleted = isCompleted !== undefined ? (isCompleted ? 1 : 0) : task.isCompleted
 
-		// Валидация приоритета, если передан
 		let newPriority = task.priority
 		if (priority !== undefined) {
 			const allowedPriorities = ['low', 'normal', 'high']
@@ -192,9 +185,6 @@ exports.updateTask = (req, res) => {
 	})
 }
 
-// =====================
-// DELETE TASK
-// =====================
 exports.deleteTask = (req, res) => {
 	const { id } = req.params
 
